@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <!-- Remplacé par l'adresse du site au moment de la fabrication (--base-href). -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Harem Club, gestion du club : tables, bar, caisse, stock.">
+
+  <!-- iPhone : appli sur l'écran d'accueil -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Harem Club">
+  <meta name="theme-color" content="#0E0C0A">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="manifest" href="manifest.json">
+
+  <title>Harem Club</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0E0C0A; }
+    #chargement {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      font-family: Georgia, 'Times New Roman', serif; color: #F5A800;
+    }
+    #chargement .etoile { font-size: 22px; }
+    #chargement .nom { font-size: 44px; letter-spacing: 6px; font-weight: 700; }
+    #chargement .club { font-size: 16px; letter-spacing: 10px; margin-top: -6px; }
+    #chargement .barre { width: 120px; height: 3px; background: #2A241C; border-radius: 2px; overflow: hidden; margin-top: 12px; }
+    #chargement .barre::after { content: ''; display: block; width: 40%; height: 100%; background: #F5A800; animation: aller 1.2s ease-in-out infinite; }
+    @keyframes aller { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  </style>
+</head>
+<body>
+  <div id="chargement">
+    <div class="etoile">&#9733;</div>
+    <div class="nom">HAREM</div>
+    <div class="club">CLUB</div>
+    <div class="barre"></div>
+  </div>
+  <script>
+    // Garde l'application sur l'appareil pour qu'elle s'ouvre même sans internet.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+    window.addEventListener('flutter-first-frame', function () {
+      var c = document.getElementById('chargement');
+      if (c) c.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
