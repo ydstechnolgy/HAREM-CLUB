@@ -120,6 +120,8 @@ jobs:
 
   publier:
     needs: [android, windows]
+    # Le programme Windows est publié même si l'APK n'a pas pu être fabriqué.
+    if: always() && needs.windows.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
