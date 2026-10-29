@@ -148,7 +148,7 @@ class _LigneBoisson extends StatelessWidget {
           ]),
         ),
         Text(fcfa(q * prix), style: style.copyWith(color: barre ? HC.gris : HC.gris)),
-        if (action != null) action!,
+        ?action,
       ]),
     );
   }

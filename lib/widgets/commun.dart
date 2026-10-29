@@ -192,7 +192,7 @@ class TitreSection extends StatelessWidget {
             child: Text(texte.toUpperCase(),
                 style: const TextStyle(color: HC.or, fontSize: 12.5, letterSpacing: 1.5, fontWeight: FontWeight.w700)),
           ),
-          if (droite != null) droite!,
+          ?droite,
         ],
       ),
     );
