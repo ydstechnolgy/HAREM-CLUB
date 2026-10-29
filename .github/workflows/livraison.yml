@@ -49,7 +49,9 @@ jobs:
       - name: Signature
         if: env.KEYSTORE_BASE64 != ''
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/haremclub.jks
+          echo "$KEYSTORE_BASE64" | tr -d ' \r\n\t' | base64 -d > android/app/haremclub.jks
+          KEYSTORE_PASSWORD=$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d ' \r\n\t')
+          keytool -list -keystore android/app/haremclub.jks -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1 || echo "::error::La clé Android ou son mot de passe ne correspond pas (secrets GitHub)."
           cat > android/key.properties <<PROPS
           storeFile=haremclub.jks
           storePassword=$KEYSTORE_PASSWORD
@@ -59,7 +61,13 @@ jobs:
 
       - run: flutter pub get
       - name: Fabrication de l'APK
-        run: flutter build apk --release --split-per-abi --build-name=1.0.$NUMERO --build-number=$((NUMERO + 100))
+        run: |
+          set -o pipefail
+          flutter build apk --release --split-per-abi --build-name=1.0.$NUMERO --build-number=$((NUMERO + 100)) 2>&1 | tee apk.txt || {
+            # Les erreurs deviennent des annotations lisibles sur GitHub
+            grep -iE -A3 'what went wrong|error|exception|tampered|password|keystore' apk.txt | grep -v '^\s*$' | head -30 | sed 's/^/::error::/'
+            exit 1
+          }
       - name: Noms des fichiers
         run: |
           mkdir livraison
