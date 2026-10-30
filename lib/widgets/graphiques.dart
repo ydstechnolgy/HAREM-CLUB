@@ -121,9 +121,11 @@ class BarresHorizontales extends StatelessWidget {
                 child: Text(b.libelle,
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
-              if (b.detail != null) Text('${b.detail}   ', style: const TextStyle(color: HC.gris, fontSize: 12.5)),
+              const SizedBox(width: 8),
               Text((formater ?? fcfa)(b.valeur), style: const TextStyle(fontWeight: FontWeight.w800)),
             ]),
+            if (b.detail != null)
+              Text('${b.detail}', style: const TextStyle(color: HC.gris, fontSize: 12.5)),
             const SizedBox(height: 4),
             LayoutBuilder(
               builder: (context, c) => Stack(children: [
