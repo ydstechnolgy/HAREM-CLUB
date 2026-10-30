@@ -126,7 +126,7 @@ class _Rapport extends StatelessWidget {
           droite: Barre('Mobile Money', entier(paiements['mobile_money'])),
         ),
       ],
-      const TitreSection('Par serveuse'),
+      const TitreSection('Par gérant'),
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),

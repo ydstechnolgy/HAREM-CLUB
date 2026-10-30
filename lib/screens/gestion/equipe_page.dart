@@ -26,7 +26,7 @@ class EquipePage extends StatelessWidget {
     final identifiant = TextEditingController();
     final pin = TextEditingController();
     final tel = TextEditingController();
-    var role = 'serveuse';
+    var role = 'gerant';
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -38,7 +38,6 @@ class EquipePage extends StatelessWidget {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'serveuse', label: Text('Serveuse')),
                     ButtonSegment(value: 'gerant', label: Text('Gérant')),
                     ButtonSegment(value: 'patron', label: Text('Patron')),
                   ],

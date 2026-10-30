@@ -50,7 +50,7 @@ class _OuvertureState extends State<_Ouverture> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const Text('La soirée est fermée', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
-          const Text('Ouvrez-la pour que les serveuses puissent ouvrir des tables.', style: TextStyle(color: HC.gris)),
+          const Text('Ouvrez-la pour commencer à ouvrir des tables.', style: TextStyle(color: HC.gris)),
           const SizedBox(height: 16),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 360),
@@ -203,7 +203,7 @@ class _SoireeEnCours extends StatelessWidget {
     if (ok == true && context.mounted) {
       await tenter(
         context,
-        () => Club.cloturerSoiree(lireNombre(especes), lireNombre(momo), note.text.trim().isEmpty ? null : note.text.trim()),
+        () => Club.cloturerSoiree(membre, lireNombre(especes), lireNombre(momo), note.text.trim().isEmpty ? null : note.text.trim()),
         succes: 'Soirée clôturée. Le résultat apparaît dans « Dernières soirées ».',
       );
     }
@@ -333,7 +333,11 @@ class _Historique extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<Lignes>(
-      stream: db.watch("SELECT * FROM nights WHERE status = 'closed' ORDER BY opened_at DESC LIMIT 15"),
+      stream: db.watch(
+        'SELECT n.*, g.display_name AS closed_by_name, o.display_name AS opened_by_name '
+        'FROM nights n LEFT JOIN members g ON g.id = n.closed_by LEFT JOIN members o ON o.id = n.opened_by '
+        "WHERE n.status = 'closed' ORDER BY n.opened_at DESC LIMIT 15",
+      ),
       builder: (context, snap) {
         final soirees = snap.data ?? const [];
         if (soirees.isEmpty) return const Text('Aucune soirée clôturée.', style: TextStyle(color: HC.gris));
@@ -354,12 +358,14 @@ class _SoireeFermee extends StatelessWidget {
     final date = DateTime.tryParse('${s['opened_at']}')?.toLocal();
     final calcule = s['expected_cash'] != null;
     final ecart = entier(s['difference_cash']) + entier(s['difference_momo']);
+    final gerant = '${s['closed_by_name'] ?? ''}'.trim();
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(date == null ? 'Soirée' : 'Soirée du ${dateCourte(date)}', style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(calcule
-            ? 'Espèces : attendu ${fcfa(entier(s['expected_cash']))}, compté ${fcfa(entier(s['counted_cash']))}\n'
+            ? '${gerant.isEmpty ? '' : 'Clôturée par $gerant\n'}'
+                'Espèces : attendu ${fcfa(entier(s['expected_cash']))}, compté ${fcfa(entier(s['counted_cash']))}\n'
                 'Mobile Money : attendu ${fcfa(entier(s['expected_momo']))}, compté ${fcfa(entier(s['counted_momo']))}'
             : 'Calcul en cours… (envoi au serveur)'),
         isThreeLine: calcule,

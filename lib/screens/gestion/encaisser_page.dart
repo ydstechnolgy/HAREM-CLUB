@@ -23,7 +23,7 @@ class EncaisserPage extends StatelessWidget {
       builder: (context, snap) {
         final notes = snap.data ?? const [];
         if (snap.hasData && notes.isEmpty) {
-          return const Vide('Aucune note à encaisser.\nQuand une serveuse appuie sur « Encaisser », la note arrive ici.',
+          return const Vide('Aucune note à encaisser.\nLes notes en attente de paiement apparaissent ici.',
               icone: Icons.point_of_sale);
         }
         return ListView.separated(
@@ -40,8 +40,9 @@ class EncaisserPage extends StatelessWidget {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 title: Text('${n['table_name'] ?? 'Table'}',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-                subtitle: Text('Serveuse : ${n['waitress_name'] ?? ''}'
-                    '${entier(n['paid_amount']) > 0 ? ' · déjà payé ${fcfa(entier(n['paid_amount']))}' : ''}'),
+                subtitle: entier(n['paid_amount']) > 0
+                    ? Text('Déjà payé ${fcfa(entier(n['paid_amount']))}')
+                    : null,
                 trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                   Text(fcfa(reste), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: HC.or)),
                   const SizedBox(width: 12),

@@ -8,7 +8,7 @@ import '../../theme/harem_theme.dart';
 import '../../utils/format.dart';
 import '../../widgets/commun.dart';
 
-/// Le menu : on appuie sur + devant chaque boisson, puis « Envoyer au bar ».
+/// Le menu : on appuie sur + devant chaque boisson, puis « Enregistrer ».
 class Commande extends StatefulWidget {
   const Commande({super.key, required this.membre, required this.tabId, required this.nomTable});
   final Membre membre;
@@ -42,20 +42,21 @@ class _CommandeState extends State<Commande> {
   }
 
   Future<void> _envoyer() async {
+    final nombre = _nombre;
     setState(() => _envoi = true);
-    final ok = await tenter(context, () => Club.envoyerAuBar(widget.membre, widget.tabId, _quantites));
+    final ok = await tenter(context, () => Club.ajouterServi(widget.membre, widget.tabId, _quantites));
     if (!mounted) return;
     setState(() => _envoi = false);
     if (ok) {
-      info(context, 'Envoyé au bar : $_nombre boisson${_nombre > 1 ? 's' : ''}');
+      info(context, 'Ajouté : $nombre boisson${nombre > 1 ? 's' : ''}');
       Navigator.pop(context, true);
     }
   }
 
   Future<bool> _quitter() async {
     if (_nombre == 0) return true;
-    return confirmer(context, 'Abandonner la commande ?',
-        'Les $_nombre boissons choisies ne seront pas envoyées au bar.', bouton: 'Abandonner', danger: true);
+    return confirmer(context, 'Abandonner ?',
+        'Les $_nombre boissons choisies ne seront pas enregistrées.', bouton: 'Abandonner', danger: true);
   }
 
   @override
@@ -127,11 +128,11 @@ class _CommandeState extends State<Commande> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: FilledButton.icon(
               onPressed: _nombre == 0 || _envoi ? null : _envoyer,
-              icon: const Icon(Icons.local_bar),
+              icon: const Icon(Icons.check),
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
               label: Text(_nombre == 0
                   ? 'Choisissez des boissons'
-                  : 'Envoyer au bar · $_nombre · ${fcfa(_montant)}'),
+                  : 'Enregistrer · $_nombre · ${fcfa(_montant)}'),
             ),
           ),
         ),

@@ -9,7 +9,6 @@ import '../widgets/etat_synchro.dart';
 import '../widgets/logo.dart';
 import 'connexion.dart';
 import 'gestion/gestion.dart';
-import 'serveuse/accueil_serveuse.dart';
 
 /// Choisit l'écran : connexion, puis l'espace qui correspond au rôle de la personne.
 class Aiguillage extends StatelessWidget {
@@ -93,7 +92,28 @@ class _ChargementState extends State<_Chargement> {
             ),
           );
         }
-        return m.estServeuse ? AccueilServeuse(membre: m) : EspaceGestion(membre: m);
+        if (m.estServeuse) {
+          // Le rôle serveuse n'existe plus dans l'application : le gérant fait tout.
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.info_outline, color: HC.or, size: 44),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Ce compte serveuse n\'est plus utilisé. Demandez au patron de le passer en gérant, '
+                    'ou connectez-vous avec un compte gérant.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  TextButton(onPressed: () => deconnexion(context), child: const Text('Se déconnecter')),
+                ]),
+              ),
+            ),
+          );
+        }
+        return EspaceGestion(membre: m);
       },
     );
   }

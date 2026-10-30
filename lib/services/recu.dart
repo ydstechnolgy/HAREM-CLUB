@@ -46,9 +46,8 @@ class Recu {
   /// Fabrique le reçu d'une note à partir de la base locale.
   static Future<Uint8List> pdf(String tabId) async {
     final note = await db.get(
-      'SELECT t.*, ct.name AS table_name, m.display_name AS waitress_name '
-      'FROM tabs t LEFT JOIN club_tables ct ON ct.id = t.table_id '
-      'LEFT JOIN members m ON m.id = t.waitress_id WHERE t.id = ?',
+      'SELECT t.*, ct.name AS table_name FROM tabs t '
+      'LEFT JOIN club_tables ct ON ct.id = t.table_id WHERE t.id = ?',
       [tabId],
     );
     final lignes = await db.getAll(
@@ -84,7 +83,7 @@ class Recu {
           pw.Text(telephone, textAlign: pw.TextAlign.center, style: petit),
         pw.SizedBox(height: 6),
         ligne(numero != null ? 'Reçu n° $numero' : 'Reçu', '${dateCourte(date)} ${_heure(date)}'),
-        ligne('${note['table_name'] ?? 'Table'}', 'Serveuse : ${note['waitress_name'] ?? ''}'),
+        pw.Text('${note['table_name'] ?? 'Table'}', style: gras),
         pw.Divider(thickness: 0.5),
         for (final l in lignes) ...[
           pw.Text('${l['product_name']}', style: gras),

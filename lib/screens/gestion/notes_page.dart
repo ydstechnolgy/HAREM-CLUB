@@ -9,6 +9,7 @@ import '../../theme/harem_theme.dart';
 import '../../utils/format.dart';
 import '../../widgets/commun.dart';
 import '../commun/commande.dart';
+import '../serveuse/choix_table.dart';
 import 'encaisser_page.dart';
 
 /// Toutes les notes de la soirée : en cours, à encaisser, encaissées.
@@ -16,19 +17,41 @@ class NotesPage extends StatelessWidget {
   const NotesPage({super.key, required this.membre});
   final Membre membre;
 
+  Future<void> _ouvrirTable(BuildContext context) async {
+    final soiree = await Club.soireeOuverteId();
+    if (!context.mounted) return;
+    if (soiree == null) {
+      erreur(context, Exception('Ouvrez d\'abord la soirée (Soirée et caisse > Ouvrir la soirée).'));
+      return;
+    }
+    final tabId = await Navigator.push<String>(
+        context, MaterialPageRoute(builder: (_) => ChoixTable(membre: membre)));
+    if (tabId != null && context.mounted) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => NoteGestion(membre: membre, tabId: tabId)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<Lignes>(
       stream: Requetes.notesDeLaSoiree(),
       builder: (context, snap) {
         final notes = snap.data ?? const [];
-        if (snap.hasData && notes.isEmpty) {
-          return const Vide('Aucune table ouverte ce soir.', icone: Icons.table_restaurant);
-        }
         final enCours = notes.where((n) => n['status'] == 'open' || n['status'] == 'to_pay').toList();
         final payees = notes.where((n) => n['status'] == 'paid').toList();
         final annulees = notes.where((n) => n['status'] == 'cancelled').toList();
         return ListView(padding: const EdgeInsets.all(16), children: [
+          FilledButton.icon(
+            onPressed: () => _ouvrirTable(context),
+            icon: const Icon(Icons.add),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
+            label: const Text('Ouvrir une table'),
+          ),
+          if (snap.hasData && notes.isEmpty) const Padding(
+            padding: EdgeInsets.only(top: 24),
+            child: Vide('Aucune table ouverte ce soir.', icone: Icons.table_restaurant),
+          ),
+          if (enCours.isNotEmpty)
           TitreSection('En cours · ${enCours.length}',
               droite: Text(fcfa(enCours.fold<int>(0, (s, n) => s + entier(n['total']))),
                   style: const TextStyle(color: HC.gris))),

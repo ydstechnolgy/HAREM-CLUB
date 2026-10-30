@@ -31,7 +31,7 @@ class Club {
     return id;
   }
 
-  static Future<void> cloturerSoiree(int especesComptees, int mobileMoneyCompte, String? note) async {
+  static Future<void> cloturerSoiree(Membre m, int especesComptees, int mobileMoneyCompte, String? note) async {
     final soiree = await soireeOuverteId();
     if (soiree == null) throw Exception('Aucune soirée ouverte.');
     final ouvertes = await db.get(
@@ -42,8 +42,8 @@ class Club {
     await db.writeTransaction((tx) async {
       // Affichage immédiat ; les montants attendus et les écarts arrivent du serveur.
       await tx.execute(
-        "UPDATE nights SET status = 'closed', closed_at = ?, counted_cash = ?, counted_momo = ?, note = ? WHERE id = ?",
-        [maintenantIso(), especesComptees, mobileMoneyCompte, note, soiree],
+        "UPDATE nights SET status = 'closed', closed_by = ?, closed_at = ?, counted_cash = ?, counted_momo = ?, note = ? WHERE id = ?",
+        [m.id, maintenantIso(), especesComptees, mobileMoneyCompte, note, soiree],
       );
       await ajouterOperation(tx, 'close_night',
           {'p_counted_cash': especesComptees, 'p_counted_momo': mobileMoneyCompte, 'p_note': note});
@@ -118,6 +118,43 @@ class Club {
       if (lignes.isNotEmpty) {
         await ajouterOperation(tx, 'add_items', {'p_tab_id': tabId, 'p_items': lignes});
       }
+    });
+  }
+
+  /// Le gérant enregistre des boissons déjà servies (il les donne en même temps).
+  /// Le stock est baissé par le serveur (fonction serve_items), comme pour un service classique.
+  /// [quantites] : identifiant de la boisson → nombre.
+  static Future<void> ajouterServi(Membre m, String tabId, Map<String, int> quantites) async {
+    final choix = {
+      for (final e in quantites.entries)
+        if (e.value > 0) e.key: e.value
+    };
+    if (choix.isEmpty) return;
+    final note = await db.getOptional('SELECT status FROM tabs WHERE id = ?', [tabId]);
+    if (note == null || note['status'] != 'open') throw Exception('Cette note n\'est plus ouverte.');
+
+    final lignes = <Map<String, dynamic>>[];
+    final ids = <String>[];
+    await db.writeTransaction((tx) async {
+      for (final e in choix.entries) {
+        final p = await tx.getOptional('SELECT name, sale_price FROM products WHERE id = ? AND active = 1', [e.key]);
+        if (p == null) continue;
+        final id = (await tx.get('SELECT uuid() AS id'))['id'] as String;
+        await tx.execute(
+          'INSERT INTO tab_items (id, tab_id, product_id, product_name, quantity, unit_price, status, '
+          'requested_at, requested_by, served_by, served_at) '
+          "VALUES (?, ?, ?, ?, ?, ?, 'served', ?, ?, ?, ?)",
+          [id, tabId, e.key, p['name'], e.value, entier(p['sale_price']), maintenantIso(), m.id, m.id, maintenantIso()],
+        );
+        lignes.add({'id': id, 'product_id': e.key, 'quantity': e.value});
+        ids.add(id);
+      }
+      if (lignes.isNotEmpty) {
+        // Le serveur rejoue l'ajout puis le service (qui baisse le stock), dans l'ordre.
+        await ajouterOperation(tx, 'add_items', {'p_tab_id': tabId, 'p_items': lignes});
+        await ajouterOperation(tx, 'serve_items', {'p_item_ids': ids});
+      }
+      await _recalculer(tx, tabId);
     });
   }
 

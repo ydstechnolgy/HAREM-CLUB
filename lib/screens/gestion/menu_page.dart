@@ -98,7 +98,7 @@ class _BoissonsState extends State<_Boissons> {
                     value: actif,
                     onChanged: (v) => set(() => actif = v),
                     title: const Text('Au menu'),
-                    subtitle: const Text('Désactivez pour la retirer du menu des serveuses.'),
+                    subtitle: const Text('Désactivez pour la retirer du menu.'),
                   ),
               ]),
             ),
@@ -227,7 +227,7 @@ class _Categories extends StatelessWidget {
         builder: (context, snap) {
           final cats = snap.data ?? const [];
           return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
-            const Text('L\'ordre des catégories est celui du menu des serveuses.', style: TextStyle(color: HC.gris)),
+            const Text('L\'ordre des catégories est celui du menu.', style: TextStyle(color: HC.gris)),
             const SizedBox(height: 8),
             for (var i = 0; i < cats.length; i++)
               Card(
@@ -333,7 +333,7 @@ class _Tables extends StatelessWidget {
         builder: (context, snap) {
           final tables = snap.data ?? const [];
           return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
-            const Text('Les tables créées par les serveuses pendant la soirée sont marquées « provisoire ».',
+            const Text('Les tables créées pendant la soirée sont marquées « provisoire ».',
                 style: TextStyle(color: HC.gris)),
             const SizedBox(height: 8),
             for (final t in tables)
