@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -36,6 +37,86 @@ class _ReglagesPageState extends State<ReglagesPage> {
     if (v == null || !mounted) return;
     await tenter(context, () => db.execute('UPDATE settings SET $colonne = ? WHERE id = ?', [v, r['id']]),
         succes: 'Enregistré.');
+  }
+
+  Future<void> _changerMesAcces() async {
+    final identifiant = TextEditingController(text: widget.membre.login);
+    final pin = TextEditingController();
+    var voirPin = false;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => AlertDialog(
+          title: const Text('Mon identifiant et mon code PIN'),
+          content: SizedBox(
+            width: 420,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('Changez votre identifiant, votre code PIN, ou les deux. '
+                  'Vos nouveaux accès serviront à votre prochaine connexion.', style: TextStyle(color: HC.gris)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: identifiant,
+                autocorrect: false,
+                enableSuggestions: false,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9._-]'))],
+                decoration: const InputDecoration(
+                    labelText: 'Identifiant', prefixIcon: Icon(Icons.person_outline)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: pin,
+                obscureText: !voirPin,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: 'Nouveau code PIN',
+                  helperText: 'Laissez vide pour garder le même.',
+                  counterText: '',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(voirPin ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => set(() => voirPin = !voirPin),
+                  ),
+                ),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Enregistrer')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final nouvelId = identifiant.text.trim().toLowerCase();
+    final nouveauPin = pin.text.trim();
+    if (nouvelId == widget.membre.login && nouveauPin.isEmpty) return;
+    if (nouveauPin.isNotEmpty && nouveauPin.length != 6) {
+      return erreur(context, Exception('Le code PIN doit contenir 6 chiffres.'));
+    }
+    final change = nouvelId != widget.membre.login;
+    final fait = await tenter(
+      context,
+      () => Supabase.instance.client.rpc('change_my_credentials', params: {
+        'p_new_login': change ? nouvelId : null,
+        'p_new_pin': nouveauPin.isEmpty ? null : nouveauPin,
+      }),
+    );
+    if (fait && mounted) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Accès modifiés'),
+          content: Text(change
+              ? 'À votre prochaine connexion, utilisez l\'identifiant « $nouvelId »'
+                  '${nouveauPin.isNotEmpty ? ' et votre nouveau code PIN' : ''}. Notez-le bien.'
+              : 'Votre nouveau code PIN servira à votre prochaine connexion.'),
+          actions: [FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Compris'))],
+        ),
+      );
+    }
   }
 
   Future<void> _remiseAZero() async {
@@ -162,13 +243,23 @@ class _ReglagesPageState extends State<ReglagesPage> {
               ),
             ),
           ],
-          const TitreSection('Compte'),
+          const TitreSection('Mon compte'),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: HC.rouge),
-              title: Text('Se déconnecter (${widget.membre.nom})'),
-              onTap: () => deconnexion(context),
-            ),
+            child: Column(children: [
+              ListTile(
+                leading: const Icon(Icons.badge_outlined, color: HC.or),
+                title: const Text('Mon identifiant et mon code PIN'),
+                subtitle: Text('Identifiant actuel : ${widget.membre.login}'),
+                trailing: const Icon(Icons.edit_outlined, color: HC.gris),
+                onTap: _changerMesAcces,
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.logout, color: HC.rouge),
+                title: Text('Se déconnecter (${widget.membre.nom})'),
+                onTap: () => deconnexion(context),
+              ),
+            ]),
           ),
         ]);
       },
