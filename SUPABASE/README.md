@@ -16,6 +16,7 @@ Chaque script peut être relancé sans danger s'il y a eu une erreur.
 | 09_remise_a_zero.sql | Remise à zéro par le patron (Réglages > Remettre à zéro) : efface l'activité, garde le menu, les tables et l'équipe |
 | 10_mon_compte.sql | Le patron (ou le gérant) change son propre identifiant et son code PIN (Réglages > Mon compte) |
 | 11_supprimer_membre.sql | Le patron supprime définitivement un membre sans historique (Réglages > Équipe > Supprimer) |
+| 12_categorie_autres.sql | Ajoute la catégorie « Autres » au menu (cigarettes, chicha, divers…) |
 
 ## Après les scripts
 

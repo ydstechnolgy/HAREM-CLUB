@@ -38,9 +38,9 @@ class _EspaceGestionState extends State<EspaceGestion> {
   int _index = 0;
 
   late final List<_Rubrique> _rubriques = [
+    _Rubrique('Soirée et caisse', Icons.nightlife, (m) => SoireePage(membre: m)),
     _Rubrique('Tables', Icons.table_restaurant, (m) => NotesPage(membre: m),
         compteur: "SELECT COUNT(*) AS n FROM tabs WHERE status IN ('open', 'to_pay')"),
-    _Rubrique('Soirée et caisse', Icons.nightlife, (m) => SoireePage(membre: m)),
     _Rubrique('Stock', Icons.inventory_2_outlined, (m) => StockPage(membre: m)),
     _Rubrique('Menu et tables', Icons.menu_book, (m) => MenuPage(membre: m)),
     _Rubrique('Rapports', Icons.bar_chart, (m) => RapportsPage(membre: m)),
