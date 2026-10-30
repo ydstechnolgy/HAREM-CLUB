@@ -74,11 +74,11 @@ class Recu {
 
     final doc = pw.Document();
     doc.addPage(pw.Page(
-      pageFormat: PdfPageFormat.roll80,
-      margin: const pw.EdgeInsets.all(5 * PdfPageFormat.mm),
+      pageFormat: PdfPageFormat.roll57,
+      margin: const pw.EdgeInsets.all(3 * PdfPageFormat.mm),
       build: (_) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.stretch, children: [
         pw.Text(entete, textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, letterSpacing: 2)),
+            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, letterSpacing: 1.5)),
         if (telephone != null && telephone.isNotEmpty)
           pw.Text(telephone, textAlign: pw.TextAlign.center, style: petit),
         pw.SizedBox(height: 6),
@@ -114,10 +114,10 @@ class Recu {
     final p = kIsWeb ? null : await imprimante();
     if (p != null) {
       final ok = await Printing.directPrintPdf(
-          printer: p, format: PdfPageFormat.roll80, name: 'Recu-Harem-Club', onLayout: (_) async => octets);
+          printer: p, format: PdfPageFormat.roll57, name: 'Recu-Harem-Club', onLayout: (_) async => octets);
       if (ok) return;
     }
-    await Printing.layoutPdf(name: 'Recu-Harem-Club', format: PdfPageFormat.roll80, onLayout: (_) async => octets);
+    await Printing.layoutPdf(name: 'Recu-Harem-Club', format: PdfPageFormat.roll57, onLayout: (_) async => octets);
   }
 
   // ---------------------------------------------------------------- WhatsApp
