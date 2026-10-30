@@ -10,7 +10,7 @@ import '../../utils/format.dart';
 import '../../widgets/commun.dart';
 import '../../widgets/graphiques.dart';
 
-/// Rapport d'une soirée : chiffre, marge, serveuses, boissons les plus vendues.
+/// Rapport d'une soirée : chiffre, serveuses, boissons les plus vendues.
 /// Calculé par le serveur (il connaît les prix d'achat) : il faut internet.
 class RapportsPage extends StatefulWidget {
   const RapportsPage({super.key, required this.membre});
@@ -106,14 +106,12 @@ class _Rapport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ca = entier(r['revenue']);
-    final cout = entier(r['cost']);
     final paiements = Map<String, dynamic>.from((r['payments'] as Map?) ?? const {});
     final serveuses = [for (final x in (r['by_waitress'] as List? ?? const [])) Map<String, dynamic>.from(x as Map)];
     final top = [for (final x in (r['top_products'] as List? ?? const [])) Map<String, dynamic>.from(x as Map)];
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Wrap(spacing: 12, runSpacing: 12, children: [
         _Tuile('Chiffre encaissé', fcfa(ca), accent: true),
-        _Tuile('Marge sur les boissons', fcfa(ca - cout)),
         _Tuile('Espèces', fcfa(entier(paiements['cash']))),
         _Tuile('Mobile Money', fcfa(entier(paiements['mobile_money']))),
         _Tuile('Dépenses', fcfa(entier(r['expenses']))),
@@ -121,12 +119,6 @@ class _Rapport extends StatelessWidget {
         if (entier(r['tabs_open']) > 0) _Tuile('Notes encore ouvertes', '${entier(r['tabs_open'])}'),
         if (entier(r['tabs_cancelled']) > 0) _Tuile('Notes annulées', '${entier(r['tabs_cancelled'])}'),
       ]),
-      if (cout == 0 && ca > 0)
-        const Padding(
-          padding: EdgeInsets.only(top: 8),
-          child: Text('La marge sera juste quand les prix d\'achat seront saisis (Stock > arrivée de stock).',
-              style: TextStyle(color: HC.gris, fontSize: 12.5)),
-        ),
       if (entier(paiements['cash']) + entier(paiements['mobile_money']) > 0) ...[
         const TitreSection('Espèces et Mobile Money'),
         BarrePartagee(
@@ -163,8 +155,7 @@ class _Rapport extends StatelessWidget {
                   formater: (q) => '$q vendu${q > 1 ? 's' : ''}',
                   barres: [
                     for (final t in top)
-                      Barre('${t['name']}', entier(t['quantity']),
-                          detail: '${fcfa(entier(t['revenue']))} · marge ${fcfa(entier(t['margin']))}'),
+                      Barre('${t['name']}', entier(t['quantity']), detail: fcfa(entier(t['revenue']))),
                   ],
                 ),
         ),
