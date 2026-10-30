@@ -167,13 +167,16 @@ class BarrePartagee extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 6),
-      Row(children: [
-        Container(width: 10, height: 10, color: HC.or),
-        Text('  ${gauche.libelle} $pc %', style: const TextStyle(fontSize: 12.5)),
-        const Spacer(),
-        Container(width: 10, height: 10, color: HC.bleu),
-        Text('  ${droite.libelle} ${100 - pc} %', style: const TextStyle(fontSize: 12.5)),
+      Wrap(spacing: 20, runSpacing: 6, children: [
+        _legende(HC.or, '${gauche.libelle} $pc %'),
+        _legende(HC.bleu, '${droite.libelle} ${100 - pc} %'),
       ]),
     ]);
   }
+
+  Widget _legende(Color c, String texte) => Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 10, height: 10, color: c),
+        const SizedBox(width: 6),
+        Text(texte, style: const TextStyle(fontSize: 12.5)),
+      ]);
 }

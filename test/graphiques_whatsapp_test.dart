@@ -49,7 +49,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.text('sam 14'));
       expect(touche, 'n13');
-      expect(find.text('Espèces 75 %'.replaceFirst('Espèces', '  Espèces')), findsOneWidget);
+      expect(find.text('Espèces 75 %'), findsOneWidget);
     });
   }
 }
