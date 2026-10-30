@@ -98,7 +98,20 @@ class _EncaissementState extends State<_Encaissement> {
       if (!mounted) return;
       if (nouveauReste == 0) {
         await _imprimerQuandPret();
-        if (mounted) Navigator.pop(context);
+        if (!mounted) return;
+        // Le message reste utilisable après la fermeture de la fenêtre.
+        final page = Navigator.of(context).context;
+        final messager = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+        messager.showSnackBar(SnackBar(
+          duration: const Duration(seconds: 8),
+          content: const Text('Note encaissée. Envoyer aussi le reçu par WhatsApp ?'),
+          action: SnackBarAction(
+            label: 'WhatsApp',
+            textColor: HC.vert,
+            onPressed: () => Recu.envoyerWhatsApp(page, widget.tabId),
+          ),
+        ));
       } else {
         _montant.clear();
         _donne.clear();
@@ -211,6 +224,11 @@ class _EncaissementState extends State<_Encaissement> {
             ),
           ),
           actions: [
+            TextButton.icon(
+              onPressed: () => Recu.envoyerWhatsApp(context, widget.tabId),
+              icon: const Icon(Icons.chat, color: HC.vert),
+              label: const Text('WhatsApp'),
+            ),
             TextButton(
               onPressed: () => Recu.imprimer(context, widget.tabId),
               child: const Text('Imprimer la note'),

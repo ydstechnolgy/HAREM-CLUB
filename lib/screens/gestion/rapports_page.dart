@@ -8,6 +8,7 @@ import '../../services/erreurs.dart';
 import '../../theme/harem_theme.dart';
 import '../../utils/format.dart';
 import '../../widgets/commun.dart';
+import '../../widgets/graphiques.dart';
 
 /// Rapport d'une soirée : chiffre, marge, serveuses, boissons les plus vendues.
 /// Calculé par le serveur (il connaît les prix d'achat) : il faut internet.
@@ -45,6 +46,8 @@ class _RapportsPageState extends State<RapportsPage> {
           });
         }
         return ListView(padding: const EdgeInsets.all(16), children: [
+          _GraphiqueSoirees(choisie: _soiree, onChoix: _charger),
+          const SizedBox(height: 16),
           Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
             SizedBox(
               width: 320,
@@ -124,34 +127,47 @@ class _Rapport extends StatelessWidget {
           child: Text('La marge sera juste quand les prix d\'achat seront saisis (Stock > arrivée de stock).',
               style: TextStyle(color: HC.gris, fontSize: 12.5)),
         ),
+      if (entier(paiements['cash']) + entier(paiements['mobile_money']) > 0) ...[
+        const TitreSection('Espèces et Mobile Money'),
+        BarrePartagee(
+          gauche: Barre('Espèces', entier(paiements['cash'])),
+          droite: Barre('Mobile Money', entier(paiements['mobile_money'])),
+        ),
+      ],
       const TitreSection('Par serveuse'),
       Card(
-        child: Column(children: [
-          for (final s in serveuses)
-            ListTile(
-              title: Text('${s['display_name']}', style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text('${entier(s['tabs'])} note(s) · ${entier(s['items'])} boisson(s)'
-                  '${entier(s['open_tabs']) > 0 ? ' · ${entier(s['open_tabs'])} encore ouverte(s)' : ''}'
-                  '${entier(s['removed_after_service']) > 0 ? ' · ${entier(s['removed_after_service'])} retirée(s) après service' : ''}'),
-              trailing: Text(fcfa(entier(s['revenue'])), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-            ),
-          if (serveuses.isEmpty) const ListTile(title: Text('Aucune note.')),
-        ]),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: serveuses.isEmpty
+              ? const Text('Aucune note.', style: TextStyle(color: HC.gris))
+              : BarresHorizontales(barres: [
+                  for (final s in serveuses)
+                    Barre(
+                      '${s['display_name']}',
+                      entier(s['revenue']),
+                      detail: '${entier(s['tabs'])} note(s) · ${entier(s['items'])} boisson(s)'
+                          '${entier(s['open_tabs']) > 0 ? ' · ${entier(s['open_tabs'])} ouverte(s)' : ''}'
+                          '${entier(s['removed_after_service']) > 0 ? ' · ${entier(s['removed_after_service'])} retirée(s)' : ''}',
+                    ),
+                ]),
+        ),
       ),
       const TitreSection('Boissons les plus vendues'),
       Card(
-        child: Column(children: [
-          for (final t in top)
-            ListTile(
-              dense: true,
-              leading: Text('${entier(t['quantity'])}',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: HC.or)),
-              title: Text('${t['name']}'),
-              subtitle: Text('Marge ${fcfa(entier(t['margin']))}'),
-              trailing: Text(fcfa(entier(t['revenue']))),
-            ),
-          if (top.isEmpty) const ListTile(title: Text('Aucune vente.')),
-        ]),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: top.isEmpty
+              ? const Text('Aucune vente.', style: TextStyle(color: HC.gris))
+              : BarresHorizontales(
+                  couleur: HC.bleu,
+                  formater: (q) => '$q vendu${q > 1 ? 's' : ''}',
+                  barres: [
+                    for (final t in top)
+                      Barre('${t['name']}', entier(t['quantity']),
+                          detail: '${fcfa(entier(t['revenue']))} · marge ${fcfa(entier(t['margin']))}'),
+                  ],
+                ),
+        ),
       ),
     ]);
   }
@@ -178,6 +194,66 @@ class _Tuile extends StatelessWidget {
         const SizedBox(height: 4),
         Text(valeur, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: accent ? HC.or : HC.texte)),
       ]),
+    );
+  }
+}
+
+
+/// Chiffre encaissé des 14 dernières soirées (calculé sur l'appareil, sans internet).
+class _GraphiqueSoirees extends StatelessWidget {
+  const _GraphiqueSoirees({required this.choisie, required this.onChoix});
+  final String? choisie;
+  final ValueChanged<String> onChoix;
+
+  static const _jours = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Lignes>(
+      stream: db.watch(
+        'SELECT n.id, n.status, n.opened_at, '
+        "COALESCE((SELECT SUM(t.total) FROM tabs t WHERE t.night_id = n.id AND t.status = 'paid'), 0) AS ca "
+        'FROM nights n ORDER BY n.opened_at DESC LIMIT 14',
+      ),
+      builder: (context, snap) {
+        final lignes = (snap.data ?? const <Map<String, dynamic>>[]).reversed.toList();
+        if (lignes.isEmpty) return const SizedBox.shrink();
+        final total = lignes.fold<int>(0, (t, l) => t + entier(l['ca']));
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const Expanded(
+                  child: Text('Chiffre des dernières soirées', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                ),
+                Text('Total ${fcfa(total)}', style: const TextStyle(color: HC.or, fontWeight: FontWeight.w800)),
+              ]),
+              const Text('Touchez une barre pour voir le détail de la soirée.', style: TextStyle(color: HC.gris, fontSize: 12.5)),
+              const SizedBox(height: 12),
+              BarresVerticales(
+                barres: [
+                  for (final l in lignes)
+                    () {
+                      final d = DateTime.tryParse('${l['opened_at']}')?.toLocal();
+                      return Barre(
+                        d == null ? '?' : '${_jours[d.weekday - 1]} ${d.day}',
+                        entier(l['ca']),
+                        detail: d == null ? 'Soirée' : 'Soirée du ${dateCourte(d)}${l['status'] == 'open' ? ' (en cours)' : ''}',
+                        id: l['id'] as String,
+                        choisie: l['id'] == choisie,
+                        enCours: l['status'] == 'open',
+                      );
+                    }(),
+                ],
+                onTap: (b) {
+                  if (b.id != null) onChoix(b.id!);
+                },
+              ),
+            ]),
+          ),
+        );
+      },
     );
   }
 }

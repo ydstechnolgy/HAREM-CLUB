@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/base_locale.dart';
 import '../../data/membre.dart';
@@ -35,6 +36,58 @@ class _ReglagesPageState extends State<ReglagesPage> {
     if (v == null || !mounted) return;
     await tenter(context, () => db.execute('UPDATE settings SET $colonne = ? WHERE id = ?', [v, r['id']]),
         succes: 'Enregistré.');
+  }
+
+  Future<void> _remiseAZero() async {
+    final confirmation = TextEditingController();
+    var stock = false;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => AlertDialog(
+          title: const Text('Remettre à zéro ?'),
+          content: SizedBox(
+            width: 440,
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const Text('Seront effacés définitivement :', style: TextStyle(fontWeight: FontWeight.w700)),
+              const Text('• toutes les soirées et leurs clôtures\n• toutes les notes, boissons servies et paiements\n'
+                  '• les dépenses et mouvements de caisse\n• les tables provisoires\nLes reçus repartent au n° 1.'),
+              const SizedBox(height: 12),
+              const Text('Toujours gardés : menu, prix, tables fixes, équipe, réglages.', style: TextStyle(color: HC.vert)),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: stock,
+                onChanged: (v) => set(() => stock = v ?? false),
+                title: const Text('Remettre aussi le stock à zéro'),
+                subtitle: const Text('Efface les arrivées, pertes et inventaires : toutes les boissons repartent à 0.'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: confirmation,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(labelText: 'Pour confirmer, tapez EFFACER'),
+                onChanged: (_) => set(() {}),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: HC.rouge),
+              onPressed: confirmation.text.trim().toUpperCase() == 'EFFACER' ? () => Navigator.pop(ctx, true) : null,
+              child: const Text('Tout effacer'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await tenter(
+      context,
+      () => Supabase.instance.client
+          .rpc('reset_club', params: {'p_confirmation': confirmation.text.trim(), 'p_stock': stock}),
+      succes: 'Remise à zéro faite. Les autres appareils se mettent à jour en quelques secondes.',
+    );
   }
 
   @override
@@ -94,6 +147,18 @@ class _ReglagesPageState extends State<ReglagesPage> {
                     child: const Text('Choisir'),
                   ),
                 ]),
+              ),
+            ),
+          ],
+          if (widget.membre.estPatron) ...[
+            const TitreSection('Remise à zéro'),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.restart_alt, color: HC.rouge),
+                title: const Text('Remettre le logiciel à zéro'),
+                subtitle: const Text('Efface les soirées, notes, paiements et dépenses (par exemple après les essais). '
+                    'Le menu, les prix, les tables et l\'équipe sont gardés.'),
+                onTap: _remiseAZero,
               ),
             ),
           ],

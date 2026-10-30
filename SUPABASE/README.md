@@ -13,6 +13,7 @@ Chaque script peut être relancé sans danger s'il y a eu une erreur.
 | 06_powersync.sql | Accès de PowerSync pour la synchronisation (remplacer le mot de passe avant de lancer) |
 | 07_synchronisation.sql | Colonne « club » sur chaque table, utilisée par PowerSync. À relancer si le script 02 est relancé |
 | 08_tables_occupees.sql | Chaque table indique si une note y est en cours : les serveuses voient les tables prises par leurs collègues |
+| 09_remise_a_zero.sql | Remise à zéro par le patron (Réglages > Remettre à zéro) : efface l'activité, garde le menu, les tables et l'équipe |
 
 ## Après les scripts
 

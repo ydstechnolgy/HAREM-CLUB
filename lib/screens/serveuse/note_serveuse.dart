@@ -4,6 +4,7 @@ import '../../data/actions.dart';
 import '../../data/base_locale.dart';
 import '../../data/membre.dart';
 import '../../data/requetes.dart';
+import '../../services/recu.dart';
 import '../../theme/harem_theme.dart';
 import '../../utils/format.dart';
 import '../../widgets/commun.dart';
@@ -252,6 +253,13 @@ class _Pied extends StatelessWidget {
                   ),
                 ),
               ]),
+            if (etat == 'paid')
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54), foregroundColor: HC.vert),
+                onPressed: () => Recu.envoyerWhatsApp(context, tabId),
+                icon: const Icon(Icons.chat),
+                label: const Text('Envoyer le reçu par WhatsApp'),
+              ),
             if (etat == 'to_pay')
               Row(children: [
                 Expanded(

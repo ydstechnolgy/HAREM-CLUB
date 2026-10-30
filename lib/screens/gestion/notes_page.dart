@@ -154,6 +154,11 @@ class NoteGestion extends StatelessWidget {
             title: Text('$nomTable · ${note['waitress_name'] ?? ''}'),
             actions: [
               IconButton(
+                tooltip: 'Envoyer par WhatsApp',
+                icon: const Icon(Icons.chat, color: HC.vert),
+                onPressed: () => Recu.envoyerWhatsApp(context, tabId),
+              ),
+              IconButton(
                 tooltip: 'Imprimer',
                 icon: const Icon(Icons.print),
                 onPressed: () => tenter(context, () => Recu.imprimer(context, tabId)),
