@@ -7,7 +7,6 @@ import '../../data/membre.dart';
 import '../../theme/harem_theme.dart';
 import '../../widgets/etat_synchro.dart';
 import '../../widgets/icone_compteur.dart';
-import 'encaisser_page.dart';
 import 'equipe_page.dart';
 import 'menu_page.dart';
 import 'notes_page.dart';
@@ -41,8 +40,6 @@ class _EspaceGestionState extends State<EspaceGestion> {
   late final List<_Rubrique> _rubriques = [
     _Rubrique('Tables', Icons.table_restaurant, (m) => NotesPage(membre: m),
         compteur: "SELECT COUNT(*) AS n FROM tabs WHERE status IN ('open', 'to_pay')"),
-    _Rubrique('Encaisser', Icons.point_of_sale, (m) => EncaisserPage(membre: m),
-        compteur: "SELECT COUNT(*) AS n FROM tabs WHERE status = 'to_pay'"),
     _Rubrique('Soirée et caisse', Icons.nightlife, (m) => SoireePage(membre: m)),
     _Rubrique('Stock', Icons.inventory_2_outlined, (m) => StockPage(membre: m)),
     _Rubrique('Menu et tables', Icons.menu_book, (m) => MenuPage(membre: m)),

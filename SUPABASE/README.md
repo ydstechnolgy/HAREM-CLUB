@@ -15,6 +15,7 @@ Chaque script peut être relancé sans danger s'il y a eu une erreur.
 | 08_tables_occupees.sql | Chaque table indique si une note y est en cours : les serveuses voient les tables prises par leurs collègues |
 | 09_remise_a_zero.sql | Remise à zéro par le patron (Réglages > Remettre à zéro) : efface l'activité, garde le menu, les tables et l'équipe |
 | 10_mon_compte.sql | Le patron (ou le gérant) change son propre identifiant et son code PIN (Réglages > Mon compte) |
+| 11_supprimer_membre.sql | Le patron supprime définitivement un membre sans historique (Réglages > Équipe > Supprimer) |
 
 ## Après les scripts
 

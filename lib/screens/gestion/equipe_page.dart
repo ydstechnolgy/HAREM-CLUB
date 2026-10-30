@@ -113,6 +113,11 @@ class EquipePage extends StatelessWidget {
               child: Text(actif ? 'Désactiver le compte' : 'Réactiver le compte',
                   style: TextStyle(color: actif ? HC.rouge : HC.vert)),
             ),
+          if (m['id'] != membre.id)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'supprimer'),
+              child: const Text('Supprimer définitivement', style: TextStyle(color: HC.rouge)),
+            ),
         ],
       ),
     );
@@ -170,6 +175,19 @@ class EquipePage extends StatelessWidget {
         );
         if (ok && context.mounted) {
           await tenter(context, () => _rpc.rpc('set_member_active', params: {'p_member_id': m['id'], 'p_active': !actif}));
+        }
+      case 'supprimer':
+        final ok = await confirmer(
+          context,
+          'Supprimer ${m['display_name']} ?',
+          'Le compte et son identifiant seront effacés définitivement. '
+              'Si cette personne a déjà travaillé (notes, paiements…), la suppression sera refusée : désactivez-la à la place.',
+          bouton: 'Supprimer',
+          danger: true,
+        );
+        if (ok && context.mounted) {
+          await tenter(context, () => _rpc.rpc('delete_member', params: {'p_member_id': m['id']}),
+              succes: 'Compte supprimé.');
         }
     }
   }
