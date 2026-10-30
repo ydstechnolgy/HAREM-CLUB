@@ -76,7 +76,9 @@ class Club {
     final soiree = await soireeOuverteId();
     if (soiree == null) throw Exception('La soirée n\'est pas encore ouverte.');
     final occupee = await db.getOptional(
-        "SELECT id FROM tabs WHERE table_id = ? AND status IN ('open', 'to_pay')", [tableId]);
+        "SELECT id FROM tabs WHERE table_id = ? AND status IN ('open', 'to_pay') "
+        'UNION SELECT current_tab_id FROM club_tables WHERE id = ? AND current_tab_id IS NOT NULL',
+        [tableId, tableId]);
     if (occupee != null) throw Exception('Cette table a déjà une note en cours.');
     final id = await nouvelId();
     await db.writeTransaction((tx) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/actions.dart';
+import '../../data/base_locale.dart';
 import '../../data/membre.dart';
 import '../../data/requetes.dart';
 import '../../theme/harem_theme.dart';
@@ -44,7 +45,7 @@ class ChoixTable extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Quelle table ?')),
       body: StreamBuilder<Lignes>(
-        stream: Requetes.tablesLibres(),
+        stream: Requetes.tables(),
         builder: (context, snap) {
           final tables = snap.data ?? const [];
           final zones = <String, List<Map<String, dynamic>>>{};
@@ -59,7 +60,7 @@ class ChoixTable extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('Créer une autre table'),
               ),
-              if (tables.isEmpty && snap.hasData)
+              if (snap.hasData && tables.every((t) => entier(t['occupee']) == 1))
                 const Vide('Toutes les tables sont occupées.\nCréez une nouvelle table.'),
               for (final z in zones.entries) ...[
                 TitreSection(z.key),
@@ -71,17 +72,31 @@ class ChoixTable extends StatelessWidget {
                       SizedBox(
                         width: 104,
                         height: 72,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: HC.surface2,
-                            foregroundColor: HC.texte,
-                            side: const BorderSide(color: HC.bordure),
-                            padding: const EdgeInsets.all(6),
-                          ),
-                          onPressed: () => _ouvrir(context, t['id'] as String),
-                          child: Text('${t['name']}', textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                        ),
+                        child: entier(t['occupee']) == 1
+                            ? Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: HC.bordure),
+                                ),
+                                alignment: Alignment.center,
+                                padding: const EdgeInsets.all(6),
+                                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                                  Text('${t['name']}', textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 14, color: HC.gris)),
+                                  const Text('occupée', style: TextStyle(fontSize: 11.5, color: HC.rouge)),
+                                ]),
+                              )
+                            : FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: HC.surface2,
+                                  foregroundColor: HC.texte,
+                                  side: const BorderSide(color: HC.bordure),
+                                  padding: const EdgeInsets.all(6),
+                                ),
+                                onPressed: () => _ouvrir(context, t['id'] as String),
+                                child: Text('${t['name']}', textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                              ),
                       ),
                   ],
                 ),

@@ -28,6 +28,10 @@ jobs:
           dart analyze --format=machine > analyse.txt 2>&1 || true
           awk -F'|' 'NF>=8 { sev=($1=="ERROR")?"error":"warning"; f=$4; sub(/^.*\/lib\//,"lib/",f); print "::" sev " file=" f ",line=" $5 "::" $8 }' analyse.txt
           if grep -q '^ERROR|' analyse.txt; then exit 1; fi
+      - name: Tests
+        run: |
+          set -o pipefail
+          flutter test 2>&1 | tee tests.txt || { grep -E 'Expected|Actual|Exception|failed|Error' tests.txt | head -30 | sed 's/^/::error::/'; exit 1; }
       - name: Fabrication web (contrôle complet de la compilation)
         run: |
           dart run powersync:setup_web

@@ -45,6 +45,7 @@ const schemaLocal = Schema([
     Column.integer('sort_order'),
     Column.text('created_by'),
     Column.text('created_at'),
+    Column.text('current_tab_id'), // note en cours (toutes serveuses), tenu par le serveur
   ]),
   Table('categories', [
     Column.text('club'),
@@ -224,6 +225,9 @@ const _tablesViaOperations = {
 };
 
 /// Colonnes oui/non : SQLite les stocke en 0/1, Supabase attend true/false.
+/// Colonnes tenues par le serveur : jamais envoyées depuis l'appareil.
+const _colonnesServeur = {'current_tab_id'};
+
 const _colonnesOuiNon = {'active', 'track_stock', 'is_fixed', 'from_till'};
 
 /// Erreurs définitives : renvoyer la même donnée ne servira à rien.
@@ -335,7 +339,8 @@ class _ConnecteurSupabase extends PowerSyncBackendConnector {
     final table = client.from(op.table);
     final donnees = <String, dynamic>{
       for (final e in (op.opData ?? const <String, dynamic>{}).entries)
-        e.key: _colonnesOuiNon.contains(e.key) && e.value != null ? ouiNon(e.value) : e.value,
+        if (!_colonnesServeur.contains(e.key))
+          e.key: _colonnesOuiNon.contains(e.key) && e.value != null ? ouiNon(e.value) : e.value,
     };
     switch (op.op) {
       case UpdateType.put:

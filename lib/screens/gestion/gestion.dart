@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/base_locale.dart';
 import '../../data/membre.dart';
-import '../../data/requetes.dart';
 import '../../theme/harem_theme.dart';
 import '../../widgets/etat_synchro.dart';
+import '../../widgets/icone_compteur.dart';
 import 'bar_page.dart';
 import 'encaisser_page.dart';
 import 'equipe_page.dart';
@@ -52,22 +54,35 @@ class _EspaceGestionState extends State<EspaceGestion> {
     _Rubrique('Réglages', Icons.settings_outlined, (m) => ReglagesPage(membre: m)),
   ];
 
-  Widget _icone(_Rubrique r) {
-    final icone = Icon(r.icone);
-    if (r.compteur == null) return icone;
-    return StreamBuilder<Lignes>(
-      stream: db.watch(r.compteur!),
-      builder: (context, snap) {
-        final n = entier((snap.data ?? const []).firstOrNull?['n']);
-        return Badge(
-          isLabelVisible: n > 0,
-          label: Text('$n'),
-          backgroundColor: HC.rouge,
-          child: icone,
-        );
-      },
-    );
+  /// Compteurs lus une seule fois (partagés par le menu du téléphone et celui du PC).
+  final Map<String, ValueNotifier<int>> _compteurs = {};
+  final List<StreamSubscription<Object?>> _abonnements = [];
+
+  @override
+  void initState() {
+    super.initState();
+    for (final r in _rubriques) {
+      if (r.compteur == null) continue;
+      final v = _compteurs[r.titre] = ValueNotifier<int>(0);
+      _abonnements.add(db.watch(r.compteur!).listen(
+            (rows) => v.value = rows.isEmpty ? 0 : entier(rows.first['n']),
+            onError: (_) {}, // un souci de lecture ne doit jamais casser le menu
+          ));
+    }
   }
+
+  @override
+  void dispose() {
+    for (final a in _abonnements) {
+      a.cancel();
+    }
+    for (final v in _compteurs.values) {
+      v.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _icone(_Rubrique r) => IconeCompteur(icone: r.icone, compte: _compteurs[r.titre]);
 
   @override
   Widget build(BuildContext context) {

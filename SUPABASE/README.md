@@ -12,6 +12,7 @@ Chaque script peut être relancé sans danger s'il y a eu une erreur.
 | 05_menu_et_tables.sql | Le menu du Harem Club (65 boissons, 8 catégories) et 15 tables de départ |
 | 06_powersync.sql | Accès de PowerSync pour la synchronisation (remplacer le mot de passe avant de lancer) |
 | 07_synchronisation.sql | Colonne « club » sur chaque table, utilisée par PowerSync. À relancer si le script 02 est relancé |
+| 08_tables_occupees.sql | Chaque table indique si une note y est en cours : les serveuses voient les tables prises par leurs collègues |
 
 ## Après les scripts
 

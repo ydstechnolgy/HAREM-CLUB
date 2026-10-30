@@ -62,10 +62,13 @@ class Requetes {
     );
   }
 
-  /// Tables libres (sans note en cours connue de cet appareil).
-  static Stream<Lignes> tablesLibres() => db.watch(
-        'SELECT ct.* FROM club_tables ct WHERE ct.active = 1 AND NOT EXISTS ('
+  /// Tables du club en service, avec « occupee » = 1 si une note y est en cours
+  /// (note de cet appareil, ou note d'une collègue signalée par le serveur).
+  static Stream<Lignes> tables() => db.watch(
+        'SELECT ct.*, CASE WHEN ct.current_tab_id IS NOT NULL OR EXISTS ('
         "SELECT 1 FROM tabs t WHERE t.table_id = ct.id AND t.status IN ('open', 'to_pay')) "
+        'THEN 1 ELSE 0 END AS occupee '
+        'FROM club_tables ct WHERE ct.active = 1 '
         "ORDER BY CASE ct.zone WHEN 'salle' THEN 0 WHEN 'vip' THEN 1 WHEN 'terrasse' THEN 2 ELSE 3 END, "
         'ct.sort_order, ct.name',
       );
